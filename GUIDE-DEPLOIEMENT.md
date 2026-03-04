@@ -2,8 +2,8 @@
 
 ## Ce que contient ce projet
 
-- `public/index.html` → Tableau de bord temps réel (avancement des 17 équipes)
-- `public/equipes/equipe-2-a.html` à `equipe-2-o.html` → 15 pages terrain
+- `public/index.html` → Page de pilotage : carte temps réel + dashboard 15 secteurs
+- `public/equipes/equipe-2-a.html` à `equipe-2-o.html` → 15 pages terrain (mobile-first, géoloc auto)
 - `public/config.js` → **À compléter** avec tes identifiants Firebase
 - `firebase.json` → Configuration hébergement
 - `firestore.rules` → Règles de sécurité base de données
@@ -73,34 +73,50 @@ firebase deploy
 C'est tout. Firebase affiche l'URL du site, du type :
 **https://distrib-aix-2026.web.app**
 
-## Étape 7 — Déployer les règles Firestore
-
-```bash
-firebase deploy --only firestore:rules
-```
+> Note : `firebase deploy` déploie à la fois le site ET les règles Firestore d'un coup.
+> Si besoin de ne redéployer que les règles : `firebase deploy --only firestore:rules`
 
 ---
 
 ## Comment ça marche ensuite
 
-### Pour les équipes terrain
-Tu leur envoies le lien direct de leur page, par exemple :
-- `https://distrib-aix-2026.web.app/equipes/equipe-2-a.html`
-- `https://distrib-aix-2026.web.app/equipes/equipe-2-b.html`
-- etc.
+### Pour les équipes terrain (15 liens)
+Tu leur envoies le lien direct de leur page :
+- Équipe 2-A : `.../equipes/equipe-2-a.html`
+- Équipe 2-B : `.../equipes/equipe-2-b.html`
+- Équipe 2-C : `.../equipes/equipe-2-c.html`
+- Équipe 2-D : `.../equipes/equipe-2-d.html`
+- Équipe 2-E : `.../equipes/equipe-2-e.html`
+- Équipe 2-F : `.../equipes/equipe-2-f.html`
+- Équipe 2-G : `.../equipes/equipe-2-g.html`
+- Équipe 2-H : `.../equipes/equipe-2-h.html`
+- Équipe 2-I : `.../equipes/equipe-2-i.html`
+- Équipe 2-J : `.../equipes/equipe-2-j.html`
+- Équipe 2-K : `.../equipes/equipe-2-k.html`
+- Équipe 2-L : `.../equipes/equipe-2-l.html`
+- Équipe 2-M : `.../equipes/equipe-2-m.html`
+- Équipe 2-N : `.../equipes/equipe-2-n.html`
+- Équipe 2-O : `.../equipes/equipe-2-o.html`
 
-Ils ouvrent sur leur téléphone, cochent les adresses au fur et à mesure. 
-Tout se sauvegarde automatiquement.
+(remplacer `...` par `https://distrib-aix-2026.web.app` ou ton domaine)
 
-### Pour toi (suivi)
-Tu ouvres la page d'accueil :
-- `https://distrib-aix-2026.web.app`
+Ils ouvrent sur leur téléphone :
+1. La carte s'affiche avec les points de distribution
+2. La géolocalisation se lance automatiquement (popup d'autorisation à la 1ère visite uniquement)
+3. Ils cochent les adresses → tout se sauvegarde automatiquement
+4. Le point sur la carte passe au vert ✅
 
-Tu vois en temps réel l'avancement de chaque équipe, avec barres de progression.
+### Pour toi (pilotage)
+Ouvre la page d'accueil : `https://distrib-aix-2026.web.app`
 
-### Indicateur de connexion
-- 🟢 Point vert = synchronisé avec la base
-- 🔴 Point rouge = pas de connexion (les coches marchent quand même en local, elles se synchroniseront au retour du réseau)
+- Carte complète avec les 1 839 adresses (points qui passent au vert en direct)
+- Avancement global (compteurs + barre de progression)
+- Détail secteur par secteur (%, nom de l'équipe, lien vers la fiche)
+- Clic sur un secteur = zoom sur la zone
+
+### Indicateurs de connexion
+- 🟢 Point vert = synchronisé avec Firestore en temps réel
+- 🔴 Point rouge = pas de connexion (les coches fonctionnent en local, synchronisation au retour du réseau)
 
 ---
 
@@ -110,10 +126,19 @@ Tu vois en temps réel l'avancement de chaque équipe, avec barres de progressio
 → Les règles Firestore ne sont pas déployées. Relance `firebase deploy --only firestore:rules`
 
 **La page se charge mais pas de synchro :**
-→ Vérifie que `config.js` contient les bonnes valeurs (pas les placeholders)
+→ Vérifie que `config.js` contient les bonnes valeurs (pas les placeholders "VOTRE_...")
 
-**Tu veux remettre à zéro un secteur :**
+**La carte ne s'affiche pas :**
+→ Recharge la page. Vérifie qu'il n'y a pas de bloqueur de contenu (les tuiles viennent de cartocdn.com)
+
+**La géoloc ne se lance pas :**
+→ Le site doit être en HTTPS (c'est le cas avec Firebase Hosting). Vérifie que la permission a été accordée dans les réglages du navigateur.
+
+**Remettre à zéro un secteur :**
 → Console Firebase > Firestore > collection `distribution` > document `2-a` → Supprimer
 
-**Tu veux un nom de domaine personnalisé :**
+**Remettre tout à zéro :**
+→ Console Firebase > Firestore > collection `distribution` → Supprimer la collection
+
+**Nom de domaine personnalisé :**
 → Console Firebase > Hosting > Ajouter un domaine personnalisé (ex: `distrib.pnyx20.fr`)

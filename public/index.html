@@ -99,6 +99,7 @@ window.addEventListener('resize',()=>map.invalidateSize());
 
 // State tracking
 const state={};
+const TEAMS={"2-a": "Non attribué", "2-b": "I. Moreaux Jouannet, J.-M. Segantini, C. Roupioz", "2-c": "M. Campanella, J. Tona, N. Kobral", "2-d": "P.-L. Balthazard, M. Mongellaz, S. Sorin", "2-e": "M.-P. Montoro Sadoux, B. El Ouali, V. Violland", "2-f": "N. Vairyo, A. Lefay", "2-g": "K. Dubouchet Revol, J. Papoz, C. Curtelin", "2-h": "A. Granger, V. Gillot", "2-i": "C. Anciaux, P. Tomasi, C. Missud", "2-j": "C. Moiroud, L. Coniglio", "2-k": "J.-M. Vial, J.-M. Van Hecke", "2-l": "M. Dunand, R. Faure", "2-m": "M. Frugier, C. Vasquez", "2-n": "C. Fraysse, L. Nicolas, A. Husson", "2-o": "S. Petit Guillaume, A. Mougniotte, V. Paccard"};
 const sectorMarkers={};
 const sectorLabels={};
 
@@ -118,8 +119,8 @@ Z.forEach(s=>{
   });
   // Label
   const lbl=L.marker(s.ct,{icon:L.divIcon({className:'',
-    html:`<div style="background:${s.c};color:#fff;font-family:'DM Sans';font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.35);text-align:center;border:2px solid #fff">${s.n}</div>`,
-    iconAnchor:[18,10]}),interactive:false,zIndexOffset:1000}).addTo(map);
+    html:`<div style="background:${s.c};color:#fff;font-family:'DM Sans';font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.35);text-align:center;border:2px solid #fff">${s.n}${TEAMS[s.id]&&TEAMS[s.id]!=='Non attribué'?'<br><span style="font-weight:400;font-size:7px;opacity:.85">'+TEAMS[s.id]+'</span>':''}</div>`,
+    iconAnchor:[40,14]}),interactive:false,zIndexOffset:1000}).addTo(map);
   sectorLabels[s.id]=lbl;
 });
 
@@ -131,7 +132,7 @@ Z.forEach(s=>{
   el.innerHTML=`
     <div class="sc-top">
       <span class="sc-dot" style="background:${s.c}"></span>
-      <span class="sc-name">${s.n}</span>
+      <span class="sc-name">${s.n} <span style="font-weight:400;font-size:10px;color:#6b7c8d">${TEAMS[s.id]&&TEAMS[s.id]!=='Non attribué'?'— '+TEAMS[s.id]:''}</span></span>
       <div class="sc-badges">
         <span class="sc-b sc-bf">${s.f} foy.</span>
         <span class="sc-b sc-bp">${s.q} prog.</span>

@@ -258,9 +258,96 @@ function toggleMap(){const w=document.getElementById('mapWrap'),btn=document.get
 function scrollToAddr(idx){const el=document.getElementById('ar-'+idx);if(!el)return;const body=el.closest('.st-body');if(body&&body.classList.contains('collapsed'))body.classList.remove('collapsed');if(!el.classList.contains('open'))el.classList.add('open');el.classList.remove('highlight');void el.offsetWidth;el.classList.add('highlight');setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),50)}
 function toggleStreet(el){el.nextElementSibling.classList.toggle('collapsed')}
 function toggleFoyers(el){el.closest('.ar').classList.toggle('open')}
-function onCheck(cb){updateUI();if(docRef)docRef.set({['addr_'+cb.dataset.idx]:cb.checked},{merge:true}).catch(e=>console.warn(e))}
-function saveConsignes(){if(!docRef)return;docRef.set({_team:document.getElementById('c-team').textContent||'',_rdv:document.getElementById('c-rdv').textContent||'',_notes:document.getElementById('c-notes').textContent||''},{merge:true}).catch(e=>console.warn(e))}
-if(docRef){docRef.onSnapshot(snap=>{document.getElementById('syncDot').className='sync-dot ok';if(snap.exists){const d=snap.data();document.querySelectorAll('.ck').forEach(cb=>{const k='addr_'+cb.dataset.idx;if(d[k]!==undefined)cb.checked=d[k]});if(d._team&&d._team!=='À compléter...')document.getElementById('c-team').textContent=d._team;if(d._rdv&&d._rdv!=='À compléter...')document.getElementById('c-rdv').textContent=d._rdv;if(d._notes&&d._notes!=='Digicodes, accès...')document.getElementById('c-notes').textContent=d._notes}updateUI()},err=>{document.getElementById('syncDot').className='sync-dot off';document.getElementById('pt').textContent='Mode hors-ligne'})}else{document.getElementById('pt').textContent='0 / 123 adresses distribuées'}
-function updateUI(){const all=document.querySelectorAll('.ck');const chk=document.querySelectorAll('.ck:checked');const pct=all.length?Math.round(chk.length/all.length*100):0;document.getElementById('pf').style.width=pct+'%';document.getElementById('pt').textContent=chk.length+' / '+all.length+' adresses distribuées ('+pct+'%)';applyMarkersState()}
-function applyMarkersState(){document.querySelectorAll('.ck').forEach(cb=>{const mk=markerMap[parseInt(cb.dataset.idx)];if(!mk)return;if(cb.checked)mk.setStyle({fillColor:'#22c55e',color:'#16a34a',fillOpacity:.9});else mk.setStyle({fillColor:'#264653',color:'#fff',fillOpacity:.75})})}
+function onCheck(cb){
+  saveLocal();
+  updateUI();
+  if(docRef)docRef.set({['addr_'+cb.dataset.idx]:cb.checked},{merge:true}).catch(function(e){
+    console.warn('Firestore write:',e);
+    document.getElementById('syncDot').className='sync-dot off';
+  });
+}
+
+function saveLocal(){
+  try{
+    var state={};
+    document.querySelectorAll('.ck').forEach(function(cb){state['addr_'+cb.dataset.idx]=cb.checked});
+    state._team=document.getElementById('c-team').textContent||'';
+    state._rdv=document.getElementById('c-rdv').textContent||'';
+    state._notes=document.getElementById('c-notes').textContent||'';
+    localStorage.setItem('distrib_2-f',JSON.stringify(state));
+  }catch(e){}
+}
+
+function restoreLocal(){
+  try{
+    var raw=localStorage.getItem('distrib_2-f');
+    if(!raw) return false;
+    var d=JSON.parse(raw);
+    document.querySelectorAll('.ck').forEach(function(cb){
+      var k='addr_'+cb.dataset.idx;
+      if(d[k]!==undefined) cb.checked=d[k];
+    });
+    if(d._team)document.getElementById('c-team').textContent=d._team;
+    if(d._rdv)document.getElementById('c-rdv').textContent=d._rdv;
+    if(d._notes)document.getElementById('c-notes').textContent=d._notes;
+    return true;
+  }catch(e){return false}
+}
+
+function restoreFromData(d){
+  document.querySelectorAll('.ck').forEach(function(cb){
+    var k='addr_'+cb.dataset.idx;
+    if(d[k]!==undefined) cb.checked=d[k];
+  });
+  if(d._team&&d._team!=='À compléter...')document.getElementById('c-team').textContent=d._team;
+  if(d._rdv&&d._rdv!=='À compléter...')document.getElementById('c-rdv').textContent=d._rdv;
+  if(d._notes&&d._notes!=='Digicodes, accès...')document.getElementById('c-notes').textContent=d._notes;
+  saveLocal();
+}
+
+function saveConsignes(){
+  saveLocal();
+  if(!docRef) return;
+  docRef.set({_team:document.getElementById('c-team').textContent||'',_rdv:document.getElementById('c-rdv').textContent||'',_notes:document.getElementById('c-notes').textContent||''},{merge:true}).catch(function(e){console.warn(e)});
+}
+
+// === RESTAURATION : cache local d'abord (instantané), Firestore par-dessus ===
+restoreLocal();
+updateUI();
+
+if(docRef){
+  docRef.onSnapshot(function(snap){
+    document.getElementById('syncDot').className='sync-dot ok';
+    if(snap.exists){
+      restoreFromData(snap.data());
+    }
+    updateUI();
+  },function(err){
+    console.warn('Firestore listen error:',err);
+    document.getElementById('syncDot').className='sync-dot off';
+    document.getElementById('pt').textContent='Mode hors-ligne (données locales)';
+  });
+}else{
+  document.getElementById('syncDot').className='sync-dot off';
+  document.getElementById('pt').textContent='Mode hors-ligne (données locales)';
+}
+
+function updateUI(){
+  var all=document.querySelectorAll('.ck');
+  var chk=document.querySelectorAll('.ck:checked');
+  var pct=all.length?Math.round(chk.length/all.length*100):0;
+  document.getElementById('pf').style.width=pct+'%';
+  document.getElementById('pt').textContent=chk.length+' / '+all.length+' adresses distribuées ('+pct+'%)';
+  applyMarkersState();
+}
+
+function applyMarkersState(){
+  document.querySelectorAll('.ck').forEach(function(cb){
+    var mk=markerMap[parseInt(cb.dataset.idx)];
+    if(!mk) return;
+    if(cb.checked) mk.setStyle({fillColor:'#22c55e',color:'#16a34a',fillOpacity:.9});
+    else mk.setStyle({fillColor:'#264653',color:'#fff',fillOpacity:.75});
+  });
+}
+
 </script></body></html>
